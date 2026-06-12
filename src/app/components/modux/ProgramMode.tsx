@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Code, Terminal, CheckCircle, Lightbulb, Play, Copy, AlertCircle } from 'lucide-react';
+import { askLLM } from '@/lib/llm'
 
 const languages = ['Python', 'JavaScript', 'TypeScript', 'Java', 'Go'];
 const helpTypes = ['Erro/Bug', 'Otimização', 'Nova Feature', 'Code Review'];
@@ -10,10 +11,33 @@ export function ProgramMode() {
   const [code, setCode] = useState(`File "app.py", line 12, in calculate\n  result = x / y\nZeroDivisionError: division by zero`);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [analysisText, setAnalysisText] = useState('');
+  const [solutionText, setSolutionText] = useState('');
 
-  const handleAnalyze = () => {
-    setShowAnalysis(true);
-    setTimeout(() => setShowSolution(true), 1500);
+  const handleAnalyze = async () => {
+    if(!code.trim()) return;
+    setLoading(true);
+    setShowAnalysis(false);
+    setShowSolution(false);
+    try {
+      const response = await askLLM(
+        `Você é um assistente técnico de programação. Responda sempre em português, de forma direta e objetiva.
+         Primeiro explique o problema identificado em 2-3 frases. 
+         Depois forneça a solução corrigida em um bloco de código.
+         Use o formato: ANÁLISE: <explicação> | SOLUÇÃO: <código>`,
+        `Linguagem: ${selectedLanguage}. Tipo de ajuda: ${selectedHelpType}.\n\nCódigo/Erro:\n${code}`
+        );
+      const [analysis, solution] = response.split('| SOLUÇÃO:');
+      setAnalysisText(analysis.replace('ANÁLISE:', '').trim());
+      setSolutionText(solution?.trim() ?? '');
+      setShowAnalysis(true);
+      setShowSolution(!!solution);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,16 +136,7 @@ export function ProgramMode() {
                 <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-red-900 mb-2">Erro Identificado</h3>
-                  <p className="text-red-800 mb-4">
-                    <strong>ZeroDivisionError:</strong> Você está tentando dividir por zero na linha 12.
-                    Isso acontece quando a variável <code className="bg-red-100 px-1 py-0.5 rounded">y</code> tem valor 0.
-                  </p>
-                  <div className="bg-white rounded-lg p-4 border border-red-200">
-                    <p className="text-sm text-gray-700 mb-2">
-                      <strong>Localização:</strong> linha 12, função <code>calculate</code>
-                    </p>
-                    <code className="text-sm text-red-700">result = x / y</code>
-                  </div>
+                  <p className="text-red-800 mb-4">{analysisText}</p>
                 </div>
               </div>
             </div>
@@ -134,17 +149,9 @@ export function ProgramMode() {
                 <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-green-900 mb-2">Solução Sugerida</h3>
-                  <p className="text-green-800 mb-4">
-                    Adicione uma validação antes da divisão para evitar divisão por zero:
-                  </p>
+                  <p className="text-green-800 mb-4">{solutionText}</p>
                   <div className="bg-gray-900 rounded-lg p-4">
-                    <pre className="text-sm text-green-400 font-mono">
-{`def calculate(x, y):
-    if y == 0:
-        return "Erro: divisão por zero"
-    result = x / y
-    return result`}
-                    </pre>
+                    <pre className="text-sm text-green-400 font-mono"></pre>
                   </div>
                   <div className="mt-4 flex gap-3">
                     <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
