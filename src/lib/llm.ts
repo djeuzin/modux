@@ -1,5 +1,5 @@
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama3-8b-8192';
+const MODEL = 'llama-3.1-8b-instant';
 
 export async function askLLM(systemPrompt: string, userMessage: string): Promise<string> {
   const response = await fetch(GROQ_API_URL, {
