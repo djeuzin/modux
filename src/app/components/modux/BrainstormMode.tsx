@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Lightbulb, Plus, Sparkles, Link2, TrendingUp, X } from 'lucide-react';
+import { askLLM } from '@/lib/llm';
 
 const categories = ['Produto', 'Marketing', 'Conteúdo', 'Design', 'Tecnologia'];
 const techniques = ['Mind Map', 'SCAMPER', 'Brainstorming Reverso', '6 Chapéus'];
@@ -18,14 +19,8 @@ export function BrainstormMode() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [newIdea, setNewIdea] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const suggestions = [
-    'Aplicativo mobile com gamificação',
-    'Sistema de recompensas para usuários ativos',
-    'Integração com redes sociais',
-    'Modo offline para acesso sem internet',
-    'Dashboard personalizado com métricas',
-  ];
+  const [loading, setLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
 
   const handleAddIdea = () => {
     if (!newIdea.trim()) return;
@@ -41,11 +36,23 @@ export function BrainstormMode() {
     setNewIdea('');
   };
 
-  const handleGenerateSuggestions = () => {
-    if (!topic.trim()) {
-      setTopic('Aplicativo de produtividade para estudantes');
+  const handleGenerateSuggestions = async () => {
+    if (!topic.trim()) return;
+    setLoading(true);
+    setShowSuggestions(false);
+    try {
+      const response = await askLLM(
+        `Você é um assistente de brainstorming criativo. Responda sempre em português. 
+        Gere exatamente 5 ideias criativas e distintas, uma por linha, sem numeração, sem explicações extras.`,
+        `Tema: ${topic}. Categoria: ${selectedCategory}. Técnica: ${selectedTechnique}.`
+        );
+      setAiResponse(response);
+      setShowSuggestions(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    setShowSuggestions(true);
   };
 
   const handleAddSuggestion = (suggestion: string) => {
@@ -134,9 +141,10 @@ export function BrainstormMode() {
             <button
               onClick={handleGenerateSuggestions}
               className="flex items-center justify-center gap-2 py-4 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 hover:shadow-lg hover:scale-105 transition-all duration-300"
+              disabled={loading}
             >
               <Sparkles className="w-5 h-5" />
-              Gerar sugestões
+              {loading ? 'Gerando...' : 'Gerar sugestões'}
             </button>
             <button className="py-4 bg-white text-gray-700 border-2 border-amber-500 rounded-xl font-semibold hover:bg-amber-50 hover:scale-105 transition-all duration-300">
               <Link2 className="w-5 h-5 inline mr-2" />
@@ -157,7 +165,7 @@ export function BrainstormMode() {
                 </div>
               </div>
               <div className="grid gap-3">
-                {suggestions.map((suggestion, index) => (
+                {aiResponse.split('\n').filter(l => l.trim()).map((suggestion, index) => (
                   <div
                     key={index}
                     className="bg-white border border-amber-200 rounded-lg p-4 hover:shadow-md hover:scale-102 transition-all duration-300 cursor-pointer group"
