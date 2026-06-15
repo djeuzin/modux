@@ -3,6 +3,7 @@ import { BookOpen, Code, Lightbulb, FileText, Send, Loader2 } from 'lucide-react
 import { useState } from 'react';
 import { askLLM } from '@/lib/llm.ts';
 import ReactMarkdown from 'react-markdown';
+import { useHistory } from '@/app/context/HistoryContext';
 
 const modes = [
   {
@@ -60,6 +61,8 @@ export function ModuxHome() {
     navigate(path);
   };
 
+  const { addConversation } = useHistory();
+
   const handleQuickChat = async () => {
     if (!question.trim()) return;
 
@@ -73,6 +76,18 @@ export function ModuxHome() {
          question
         );
       setAiResponse(response);
+
+      addConversation({
+        title: question,
+        preview: response.slice(0, 80),
+        category: 'study',
+        hasFiles: false,
+        conversation: [
+          { role: 'user', content: question },
+          { role: 'ai', content: response },
+        ]
+      });
+
       setShowResponse(true);
     } catch (e) {
       console.error(e);
