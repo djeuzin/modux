@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Lightbulb, Plus, Sparkles, Link2, TrendingUp, X } from 'lucide-react';
 import { askLLM } from '@/lib/llm';
+import { useHistory } from '@/app/context/HistoryContext'
 
 const categories = ['Produto', 'Marketing', 'Conteúdo', 'Design', 'Tecnologia'];
 const techniques = ['Mind Map', 'SCAMPER', 'Brainstorming Reverso', '6 Chapéus'];
@@ -21,6 +22,8 @@ export function BrainstormMode() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
+
+  const { addConversation } = useHistory();
 
   const handleAddIdea = () => {
     if (!newIdea.trim()) return;
@@ -47,6 +50,18 @@ export function BrainstormMode() {
         `Tema: ${topic}. Categoria: ${selectedCategory}. Técnica: ${selectedTechnique}.`
         );
       setAiResponse(response);
+
+      addConversation({
+        title: topic,
+        preview: response.split('\n')[0],
+        category: 'brainstorm',
+        hasFiles: false,
+        conversation: [
+          { role: 'user', content: `Tema: ${topic}. Categoria: ${selectedCategory}. Técnica: ${selectedTechnique}.` },
+          { role: 'ai', content: response },
+        ]
+      });
+
       setShowSuggestions(true);
     } catch (e) {
       console.error(e);

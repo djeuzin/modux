@@ -1,98 +1,6 @@
 import { BookOpen, Code, Lightbulb, FileText, Search, FileCheck, X, Clock } from 'lucide-react';
 import { useState } from 'react';
-
-interface HistoryItem {
-  id: string;
-  title: string;
-  preview: string;
-  category: 'study' | 'program' | 'brainstorm' | 'write';
-  time: string;
-  hasFiles: boolean;
-  conversation?: Array<{ role: 'user' | 'ai'; content: string }>;
-}
-
-const historyItems: HistoryItem[] = [
-  {
-    id: '1',
-    title: 'Como funcionam derivadas?',
-    preview: 'Discussão sobre conceitos básicos de cálculo...',
-    category: 'study',
-    time: 'Hoje',
-    hasFiles: true,
-    conversation: [
-      { role: 'user', content: 'Como funcionam derivadas?' },
-      { role: 'ai', content: 'Antes de explicar, me diga: o que você já sabe sobre derivadas?' },
-      { role: 'user', content: 'Sei o básico, mas tenho dúvidas na aplicação prática.' },
-      { role: 'ai', content: 'Ótimo! Vamos começar com o conceito fundamental: uma derivada mede a taxa de variação instantânea de uma função...' },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Erro ao importar módulo Python',
-    preview: 'Resolução de problema com imports...',
-    category: 'program',
-    time: 'Hoje',
-    hasFiles: false,
-    conversation: [
-      { role: 'user', content: 'Estou tendo erro ao importar um módulo no Python' },
-      { role: 'ai', content: 'Qual mensagem de erro você está recebendo?' },
-      { role: 'user', content: 'ModuleNotFoundError: No module named \'requests\'' },
-      { role: 'ai', content: 'Você precisa instalar o módulo requests. Execute: pip install requests' },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Ideias para aplicativo de produtividade',
-    preview: 'Brainstorm de features e funcionalidades...',
-    category: 'brainstorm',
-    time: 'Ontem',
-    hasFiles: true,
-    conversation: [
-      { role: 'user', content: 'Preciso de ideias para um app de produtividade' },
-      { role: 'ai', content: 'Vamos explorar! Que tipo de usuário você quer atender?' },
-      { role: 'user', content: 'Estudantes universitários' },
-      { role: 'ai', content: 'Perfeito! Aqui estão algumas features: 1) Timer Pomodoro com estatísticas, 2) Organização de tarefas por matéria, 3) Calendário integrado com prazos...' },
-    ],
-  },
-  {
-    id: '4',
-    title: 'Revisão de artigo científico',
-    preview: 'Melhorias no texto e estrutura...',
-    category: 'write',
-    time: 'Há 2 dias',
-    hasFiles: false,
-    conversation: [
-      { role: 'user', content: 'Pode revisar meu artigo científico?' },
-      { role: 'ai', content: 'Com certeza! Por favor, compartilhe o texto que deseja revisar.' },
-      { role: 'user', content: 'Aqui está a introdução...' },
-      { role: 'ai', content: 'Li sua introdução. Vou sugerir melhorias na clareza e estrutura. Primeiro, vamos trabalhar no parágrafo de abertura...' },
-    ],
-  },
-  {
-    id: '5',
-    title: 'Integrais definidas - exercícios',
-    preview: 'Resolução passo a passo de problemas...',
-    category: 'study',
-    time: 'Há 3 dias',
-    hasFiles: true,
-    conversation: [
-      { role: 'user', content: 'Como resolver integrais definidas?' },
-      { role: 'ai', content: 'Vamos usar o Teorema Fundamental do Cálculo. Qual integral você quer resolver?' },
-    ],
-  },
-  {
-    id: '6',
-    title: 'Bug com React hooks',
-    preview: 'Correção de useEffect infinito...',
-    category: 'program',
-    time: 'Esta semana',
-    hasFiles: false,
-    conversation: [
-      { role: 'user', content: 'Meu useEffect está causando loop infinito' },
-      { role: 'ai', content: 'Isso geralmente acontece por dependências faltando ou mal configuradas. Pode mostrar seu código?' },
-    ],
-  },
-];
+import { useHistory, Conversation } from '@/app/context/HistoryContext'
 
 const categories = {
   study: { label: 'Estudos', icon: BookOpen, color: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -107,9 +15,11 @@ export function ModuxHistory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Conversation | null>(null);
 
-  const filteredItems = historyItems.filter((item) => {
+  const { conversations } = useHistory();
+
+  const filteredItems = conversations.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || item.category === selectedCategory;
     const matchesTime = !selectedTimeFilter || item.time === selectedTimeFilter;
@@ -262,7 +172,7 @@ export function ModuxHistory() {
 
             {/* Conversation Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
-              {selectedItem.conversation?.map((message, index) => (
+              {selectedItem.conversation.map((message, index) => (
                 <div
                   key={index}
                   className={`flex gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500`}
