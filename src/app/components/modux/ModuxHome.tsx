@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router';
 import { BookOpen, Code, Lightbulb, FileText, Send, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { askLLM } from '@/lib/llm.ts';
+import ReactMarkdown from 'react-markdown';
 
 const modes = [
   {
@@ -53,21 +55,30 @@ export function ModuxHome() {
   const [question, setQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showResponse, setShowResponse] = useState(false);
-
+  const [aiResponse, setAiResponse] = useState('');
   const handleModeClick = (path: string) => {
     navigate(path);
   };
 
-  const handleQuickChat = () => {
+  const handleQuickChat = async () => {
     if (!question.trim()) return;
 
     setIsLoading(true);
     setShowResponse(false);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await askLLM(
+        `Você é um assistente direto e conciso. Responda em português em no máximo 3 frases. 
+         Se a pergunta for complexa, sugira usar um dos modos específicos (Estudo, Programação, Brainstorm ou Escrita).`,
+         question
+        );
+      setAiResponse(response);
       setShowResponse(true);
-    }, 1500);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -161,11 +172,9 @@ export function ModuxHome() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-2">Resposta</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Entendi sua pergunta "{question}". Para uma resposta mais detalhada e guiada,
-                  recomendo usar um dos modos específicos acima. Cada modo oferece uma experiência
-                  personalizada para diferentes tipos de interação.
-                </p>
+                <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none"> 
+                  <ReactMarkdown>{aiResponse}</ReactMarkdown>
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
