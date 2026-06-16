@@ -1,6 +1,7 @@
 import { BookOpen, Code, Lightbulb, FileText, Search, FileCheck, X, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useHistory, Conversation } from '@/app/context/HistoryContext'
+import ReactMarkdown from 'react-markdown';
 
 const categories = {
   study: { label: 'Estudos', icon: BookOpen, color: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -197,7 +198,9 @@ export function ModuxHistory() {
                           : 'bg-gray-100 text-gray-900'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                        <ReactMarkdown>{message.content ?? ''}</ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                   {message.role === 'user' && (
