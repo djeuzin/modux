@@ -19,12 +19,15 @@ interface HistoryContextType {
   conversations: Conversation[];
   addConversation: (conv: Omit<Conversation, 'id' | 'time'>) => void;
   appendMessage: (id: string, message: Message) => void;
+  activeConversation: Conversation | null;
+  setActiveConversation: (conv: Conversation | null) => void;
 }
 
 const HistoryContext = createContext<HistoryContextType | null>(null);
 
 export function HistoryProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
 
   const addConversation = (conv: Omit<Conversation, 'id' | 'time'>) => {
     const newConv: Conversation = {
@@ -47,7 +50,7 @@ export function HistoryProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <HistoryContext.Provider value={{ conversations, addConversation, appendMessage }}>
+    <HistoryContext.Provider value={{ conversations, addConversation, appendMessage, activeConversation, setActiveConversation }}>
       {children}
     </HistoryContext.Provider>
   );

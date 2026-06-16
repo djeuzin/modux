@@ -2,6 +2,7 @@ import { BookOpen, Code, Lightbulb, FileText, Search, FileCheck, X, Clock } from
 import { useState } from 'react';
 import { useHistory, Conversation } from '@/app/context/HistoryContext'
 import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router';
 
 const categories = {
   study: { label: 'Estudos', icon: BookOpen, color: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -18,7 +19,9 @@ export function ModuxHistory() {
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<Conversation | null>(null);
 
-  const { conversations } = useHistory();
+  const navigate = useNavigate();
+
+  const { conversations, setActiveConversation } = useHistory();
 
   const filteredItems = conversations.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -220,7 +223,13 @@ export function ModuxHistory() {
               >
                 Fechar
               </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button
+                onClick = {() => {
+                  setActiveConversation(selectedItem);
+                  navigate('/');
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Continuar conversa
               </button>
             </div>

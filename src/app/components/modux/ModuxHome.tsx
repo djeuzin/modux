@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { BookOpen, Code, Lightbulb, FileText, Send, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { askLLM } from '@/lib/llm.ts';
 import ReactMarkdown from 'react-markdown';
 import { useHistory } from '@/app/context/HistoryContext';
@@ -60,7 +60,37 @@ export function ModuxHome() {
     navigate(path);
   };
 
-  const { addConversation } = useHistory();
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const { addConversation, activeConversation, setActiveConversation } = useHistory();
+
+  useEffect(() => {
+    if (activeConversation) {
+      setMessages(activeConversation.conversation.map(m => ({
+        role: m.role,
+        content: m.content,
+      })));
+      setActiveConversation(null);
+    }
+  }, [activeConversation]);
+
+  /* Cleanup useeffect */
+  useEffect(() => {
+    return () => {
+      if (messagesRef.current.length > 0) {
+        addConversation({
+          title: messagesRef.current[0].content.slice(0, 50),
+          preview: messagesRef.current[1]?.content.slice(0, 80) ?? '',
+          category: 'study',
+          hasFiles: false,
+          conversation: messagesRef.current,
+        });
+      }
+    };
+  }, []);
 
   const handleQuickChat = async () => {
     if (!question.trim() || isLoading) return;
@@ -77,19 +107,6 @@ export function ModuxHome() {
          userMessage
         );
       setMessages(prev => [...prev, { role: 'ai', content: response }]);
-
-      if (messages.length === 0) {
-        addConversation({
-          title: userMessage,
-          preview: response.slice(0, 80),
-          category: 'study',
-          hasFiles: false,
-          conversation: [
-            { role: 'user', content: userMessage },
-            { role: 'ai', content: response },
-          ]
-        });
-      } 
     } catch (e) {
       console.error(e);
     } finally {
