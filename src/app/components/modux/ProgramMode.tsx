@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Code, Terminal, CheckCircle, Lightbulb, Play, Copy, AlertCircle } from 'lucide-react';
 import { askLLM } from '@/lib/llm'
+import { useHistory } from '@/app/context/HistoryContext'
 
 const languages = ['Python', 'JavaScript', 'TypeScript', 'Java', 'Go'];
 const helpTypes = ['Erro/Bug', 'Otimização', 'Nova Feature', 'Code Review'];
@@ -14,6 +15,8 @@ export function ProgramMode() {
   const [loading, setLoading] = useState(false);
   const [analysisText, setAnalysisText] = useState('');
   const [solutionText, setSolutionText] = useState('');
+
+  const { addConversation } = useHistory();
 
   const handleAnalyze = async () => {
     if(!code.trim()) return;
@@ -33,6 +36,16 @@ export function ProgramMode() {
       setSolutionText(solution?.trim() ?? '');
       setShowAnalysis(true);
       setShowSolution(!!solution);
+      addConversation({
+        title: `${selectedHelpType} em ${selectedLanguage}`,
+        preview: analysisText.slice(0, 80),
+        category: 'program',
+        hasFiles: false,
+        conversation: [
+          { role: 'user', content: `Linguagem: ${selectedLanguage}. Tipo: ${selectedHelpType}.\n${code}` },
+          { role: 'ai', content: response },
+        ]
+      });
     } catch (e) {
       console.error(e);
     } finally {
