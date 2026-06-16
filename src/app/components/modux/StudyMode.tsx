@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { askLLM } from "@/lib/llm.ts";
 import ReactMarkdown from 'react-markdown';
+import { useHistory } from '@/app/context/HistoryContext'
 
 const knowledgeLevels = [
   "Nada ainda",
@@ -34,6 +35,8 @@ export function StudyMode() {
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [aiFullAnswer, setAiFullAnswer] = useState<string | null>(null);
 
+  const { addConversation } = useHistory();
+
   const handleStartGuided = () => {
     setShowGuided(true);
     setSelectedLevel(null);
@@ -57,6 +60,16 @@ export function StudyMode() {
       );
       const parsed = JSON.parse(response);
       setLearningSteps(parsed);
+      addConversation({
+        title: question,
+        preview: parsed[0]?.title ?? question,
+        category: 'study',
+        hasFiles: false,
+        conversation: [
+          { role: 'user', content: `${question}. Nível: ${level}.` },
+          { role: 'ai', content: response },
+        ]
+      });
     } catch (e) {
       console.error(e);
     } finally {
